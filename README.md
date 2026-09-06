@@ -8,6 +8,17 @@ final answer.
 
 ![Overview of PARSER](workflow.png)
 
+## Released model
+
+We release the trained 4B-parameter PARSER lead agent on Hugging Face:
+[inNexus/parser-4b](https://huggingface.co/inNexus/parser-4b).
+
+```bash
+hf download inNexus/parser-4b --local-dir parser-4b
+```
+
+The downloaded checkpoint can be supplied as `MODEL_PATH` during evaluation.
+
 ## Repository layout
 
 ```text
