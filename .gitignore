@@ -1,0 +1,38 @@
+# Downloaded datasets
+/data/
+
+# Training and evaluation outputs
+/train/checkpoint/
+/train/wandb/
+/eval/*_eval_outputs/
+wandb/
+outputs/
+logs/
+
+# Local model checkpoints
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+
+# Generated evaluation caches
+eval_preprocessed_*.pkl
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+
+# Temporary files
+*.log
+*.tmp
+*.swp
