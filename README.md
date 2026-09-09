@@ -11,7 +11,7 @@ final answer.
 ## Released model
 
 We release the trained 4B-parameter PARSER lead agent on Hugging Face:
-[inNexus/parser-4b](https://huggingface.co/inNexus/parser-4b).
+[parser-4b](https://huggingface.co/inNexus/parser-qwen35-4b).
 
 ```bash
 hf download inNexus/parser-4b --local-dir parser-4b
@@ -69,7 +69,7 @@ stops the required local NGINX proxies automatically.
 ## Data
 
 Download the complete
-[inNexus/parser_dataset](https://huggingface.co/datasets/inNexus/parser_dataset)
+[parser_dataset](https://huggingface.co/datasets/inNexus/parser_dataset)
 repository into `data/` at the repository root:
 
 ```bash
@@ -109,6 +109,10 @@ bash set_sglang_router.sh
 
 Record its address as `HOST:PORT`. Multiple routers may be launched on
 different nodes or ports to provide additional subagent capacity.
+
+SGLang Router can add or remove SGLang worker nodes at any time without
+restarting the router. Example commands for listing, registering, and deleting
+workers are provided in the end of `train/set_sglang_router.sh`.
 
 ### 2. Configure training
 

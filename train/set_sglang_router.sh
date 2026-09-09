@@ -19,4 +19,10 @@ python -m sglang_router.launch_server \
     --host 0.0.0.0 \
     --port 8012
 
-# The OpenAI-compatible endpoint is available at http://<host>:8012/v1.
+# Scale SGLang workers without restarting the router.
+# List registered workers:
+# curl http://127.0.0.1:8012/workers
+# Register a new SGLang worker (the worker must already be serving with --grpc-mode):
+# curl -X POST http://127.0.0.1:8012/workers -H "Content-Type: application/json" -d '{"url": "grpc://192.168.0.2:8009"}'
+# Remove a worker by the id returned from GET /workers:
+# curl -X DELETE http://127.0.0.1:8012/workers/2fcaad6f-ebbc-4423-8426-7c0b8e02840f
