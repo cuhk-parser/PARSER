@@ -325,7 +325,7 @@ class EvalConfig:
     data_path: str
     output_path: str
     chunk_max_length: int = 512
-    max_iterations: int = 16
+    max_iterations: int = 12
     max_tokens_per_trajectory: int = 32764
     lead_max_new_tokens: int = 8192
     subagent_api_key: str = ""

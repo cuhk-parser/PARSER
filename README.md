@@ -1,10 +1,12 @@
-# PARSER
+# PARSER: Read in Parallel, Reason in Depth for Long-Context LLM Agents
 
-Official implementation of **PARSER**, a multi-agent framework for long-context
-reasoning. PARSER uses a lead agent to iteratively reason about a question and
-scatter queries to subagents that process different chunks of a long document.
-The gathered observations are returned to the lead agent until it produces the
-final answer.
+This repository is the official implementation of
+[**PARSER: Read in Parallel, Reason in Depth for Long-Context LLM Agents**](https://arxiv.org/abs/2609.06702).
+
+[[Project Page](https://cuhk-parser.github.io/)]
+[[Paper](https://arxiv.org/abs/2609.06702)]
+[[Model](https://huggingface.co/inNexus/parser-qwen35-4b)]
+[[Dataset](https://huggingface.co/datasets/inNexus/parser_dataset)]
 
 ![Overview of PARSER](workflow.png)
 
@@ -14,7 +16,7 @@ We release the trained 4B-parameter PARSER lead agent on Hugging Face:
 [parser-4b](https://huggingface.co/inNexus/parser-qwen35-4b).
 
 ```bash
-hf download inNexus/parser-4b --local-dir parser-4b
+hf download inNexus/parser-qwen35-4b --local-dir parser-4b
 ```
 
 The downloaded checkpoint can be supplied as `MODEL_PATH` during evaluation.
@@ -28,6 +30,28 @@ The downloaded checkpoint can be supplied as `MODEL_PATH` during evaluation.
 ├── eval/                 # HotpotQA and 2WikiMultiHopQA evaluation
 └── train/                # Training code and launch scripts
 ```
+
+## RL training framework
+
+PARSER trains the lead policy with a fully asynchronous RL pipeline while
+keeping the subagents frozen:
+
+```text
+SGLang Router (frozen subagents on multiple SGLang servers)
+                         ↕ continuous queries and observations
+Lead-agent rollout workers (continuous trajectory generation)
+                         ↓ trajectories
+                         ↑ updated parameters every 4 steps
+Megatron Trainer (policy updates)
+```
+
+- **Fully asynchronous training.** Rollout generation and policy optimization
+  run continuously on separate compute pools. While Megatron updates the lead
+  policy, the subagent cluster continues serving rollout requests, minimizing
+  subagent idle time.
+- **Cache-aware subagent routing.** SGLang Router and Radix Cache route the
+  same document chunk to the same SGLang worker across reasoning rounds. This
+  maximizes KV-cache reuse and reduces repeated prefill cost.
 
 ## Model preparation
 
@@ -44,15 +68,45 @@ The subagent checkpoint can use the original Qwen3.5 chat template.
 
 ## Installation
 
-PARSER has been tested with CUDA 12.8/12.9. Before installing the dependencies,
-edit the first two lines of `train/env_setup.sh` so that `CUDA_HOME` points to
-your CUDA installation:
+We recommend creating a dedicated Conda environment named `mcore` and using
+**Python 3.12** with **CUDA 12.8/12.9**.
+
+```bash
+conda create -n mcore python=3.12 -y
+conda activate mcore
+```
+
+If you use a different environment name, change `conda activate mcore` in
+`train/train_4b.sh` accordingly.
+
+Before installing the dependencies, edit the first two lines of
+`train/env_setup.sh` so that `CUDA_HOME` points to your CUDA installation:
 
 ```bash
 cd train
 # Edit CUDA_HOME in env_setup.sh first.
 bash env_setup.sh
 ```
+
+### SGLang Router compatibility patch
+
+The installed `sglang_router` requires a one-line import update to work with
+`sglang==0.5.10.post1`. Locate
+`<CONDA_PREFIX>/lib/python3.12/site-packages/sglang_router/launch_server.py`
+and make the following change:
+
+```diff
+-from sglang.srt.utils import is_port_available
++from sglang.srt.utils.network import is_port_available
+```
+
+You can print the expected file path with:
+
+```bash
+python -c "import site; print(site.getsitepackages()[0] + '/sglang_router/launch_server.py')"
+```
+
+### NGINX
 
 PARSER uses NGINX as a local proxy to efficiently reuse connections to SGLang
 services across nodes. Install it on the training node, for example:
@@ -112,7 +166,7 @@ different nodes or ports to provide additional subagent capacity.
 
 SGLang Router can add or remove SGLang worker nodes at any time without
 restarting the router. Example commands for listing, registering, and deleting
-workers are provided in the end of `train/set_sglang_router.sh`.
+workers are provided at the end of `train/set_sglang_router.sh`.
 
 ### 2. Configure training
 
@@ -169,7 +223,19 @@ predictions under their respective evaluation output directories.
 
 ## Citation
 
-Citation information will be added upon publication.
+If you find PARSER useful, please cite:
+
+```bibtex
+@misc{li2026parserreadparallelreason,
+      title={PARSER: Read in Parallel, Reason in Depth for Long-Context LLM Agents},
+      author={Kun Li and Zexuan Qiu and Tianhua Zhang and Irwin King and Helen Meng},
+      year={2026},
+      eprint={2609.06702},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2609.06702},
+}
+```
 
 ## Acknowledgements
 
